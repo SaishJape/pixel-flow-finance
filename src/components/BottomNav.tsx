@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { icon: Home, label: 'Home', path: '/' },
   { icon: CreditCard, label: 'Accounts', path: '/accounts' },
-  { icon: PlusCircle, label: 'Add', path: '/add-transaction' },
+  { icon: PlusCircle, label: 'Add', path: '/ai-transaction' },
   { icon: History, label: 'History', path: '/history' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];

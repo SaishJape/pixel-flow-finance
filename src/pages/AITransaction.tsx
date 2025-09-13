@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MobileLayout } from '@/components/MobileLayout';
 import { BottomNav } from '@/components/BottomNav';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { api, Account, DEMO_USER } from '@/lib/api';
-import { Sparkles, Send } from 'lucide-react';
+import { Sparkles, Send, Mic, MicOff } from 'lucide-react';
 
 export default function AITransaction() {
   const [query, setQuery] = useState('');
@@ -17,12 +17,80 @@ export default function AITransaction() {
   const [showAccountSelection, setShowAccountSelection] = useState(false);
   const [pendingTransaction, setPendingTransaction] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     loadAccounts();
+    initializeSpeechRecognition();
   }, []);
+
+  const initializeSpeechRecognition = () => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+      
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setQuery(prev => prev + ' ' + transcript);
+        setIsRecording(false);
+      };
+      
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+        toast({
+          title: "Speech Error",
+          description: "Could not recognize speech. Please try again.",
+          variant: "destructive",
+        });
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsRecording(false);
+      };
+      
+      setRecognition(recognitionInstance);
+    }
+  };
+
+  const toggleRecording = async () => {
+    if (!recognition) {
+      toast({
+        title: "Not Supported",
+        description: "Speech recognition is not supported in your browser.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isRecording) {
+      recognition.stop();
+      setIsRecording(false);
+    } else {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        recognition.start();
+        setIsRecording(true);
+        toast({
+          title: "Listening...",
+          description: "Speak your transaction details",
+        });
+      } catch (error) {
+        toast({
+          title: "Permission Denied",
+          description: "Please allow microphone access to use voice input.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const loadAccounts = async () => {
     try {
@@ -150,13 +218,27 @@ export default function AITransaction() {
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Textarea
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="E.g., I spent 500 rupees on groceries by cash"
-              rows={4}
-              className="resize-none"
-            />
+            <div className="relative">
+              <Textarea
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="E.g., I spent 500 rupees on groceries by cash"
+                rows={4}
+                className="resize-none pr-12"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={toggleRecording}
+                className={`absolute bottom-2 right-2 h-8 w-8 p-0 ${
+                  isRecording ? 'text-red-500 animate-pulse' : 'text-finance-primary'
+                }`}
+                disabled={loading}
+              >
+                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            </div>
             
             <Button 
               type="submit" 

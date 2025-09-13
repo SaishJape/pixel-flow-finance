@@ -3,12 +3,15 @@ import { MobileLayout } from '@/components/MobileLayout';
 import { BottomNav } from '@/components/BottomNav';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { User, Database, Info, ExternalLink } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
+import { User, Database, Info, ExternalLink, Moon, Sun } from 'lucide-react';
 
 export default function Settings() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
 
   const handleExportData = () => {
     toast({
@@ -51,6 +54,29 @@ export default function Settings() {
               <h3 className="font-semibold text-foreground">Demo User</h3>
               <p className="text-sm text-finance-neutral">demo@financeapp.com</p>
             </div>
+          </div>
+        </Card>
+
+        {/* Dark Mode Toggle */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-finance-secondary">
+                {theme === 'dark' ? (
+                  <Moon className="h-5 w-5 text-finance-primary" />
+                ) : (
+                  <Sun className="h-5 w-5 text-finance-primary" />
+                )}
+              </div>
+              <div>
+                <h4 className="font-medium text-foreground">Dark Mode</h4>
+                <p className="text-sm text-finance-neutral">Switch between light and dark themes</p>
+              </div>
+            </div>
+            <Switch
+              checked={theme === 'dark'}
+              onCheckedChange={toggleTheme}
+            />
           </div>
         </Card>
 

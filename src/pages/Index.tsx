@@ -108,21 +108,13 @@ const Dashboard = () => {
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            onClick={() => navigate('/add-transaction')}
-            className="h-12 bg-finance-primary hover:bg-finance-primary/90"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Transaction
-          </Button>
+        <div className="flex justify-center">
           <Button
             onClick={() => navigate('/ai-transaction')}
-            variant="outline"
-            className="h-12 border-finance-primary text-finance-primary hover:bg-finance-primary/10"
+            className="h-12 w-full bg-finance-primary hover:bg-finance-primary/90"
           >
             <Sparkles className="h-4 w-4 mr-2" />
-            AI Entry
+            Add Transaction with AI
           </Button>
         </div>
 
@@ -184,7 +176,7 @@ const Dashboard = () => {
           ) : (
             <Card className="p-6 text-center">
               <p className="text-finance-neutral mb-3">No transactions yet</p>
-              <Button onClick={() => navigate('/add-transaction')} variant="outline">
+              <Button onClick={() => navigate('/ai-transaction')} variant="outline">
                 Add Your First Transaction
               </Button>
             </Card>
