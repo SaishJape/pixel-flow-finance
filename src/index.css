@@ -42,7 +42,7 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Finance App Specific */
+    /* Account Book Specific */
     --finance-primary: 0 0% 0%;
     --finance-primary-foreground: 0 0% 100%;
     --finance-secondary: 0 0% 96%;

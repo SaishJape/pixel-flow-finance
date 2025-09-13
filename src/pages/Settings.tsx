@@ -37,7 +37,7 @@ export default function Settings() {
       icon: Info,
       title: 'About',
       description: 'App version and information',
-      action: () => toast({ title: "Finance App", description: "Version 1.0.0 - Built with React & TypeScript" })
+      action: () => toast({ title: "Account Book", description: "Version 1.0.0 - Built with React & TypeScript" })
     }
   ];
 
@@ -51,8 +51,8 @@ export default function Settings() {
               <User className="h-6 w-6 text-finance-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">Demo User</h3>
-              <p className="text-sm text-finance-neutral">demo@financeapp.com</p>
+              <h3 className="font-semibold text-foreground">Rao Ghuge</h3>
+              <p className="text-sm text-finance-neutral">rao@baapcompany.com</p>
             </div>
           </div>
         </Card>
@@ -101,7 +101,7 @@ export default function Settings() {
         </div>
 
         {/* API Information */}
-        <Card className="p-6">
+        {/* <Card className="p-6">
           <h3 className="font-semibold mb-3">API Configuration</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -117,11 +117,11 @@ export default function Settings() {
               <span className="font-mono text-xs">1</span>
             </div>
           </div>
-        </Card>
+        </Card> */}
 
         {/* App Info */}
         <Card className="p-6 text-center">
-          <h3 className="font-semibold mb-2">Finance App</h3>
+          <h3 className="font-semibold mb-2">Account Book</h3>
           <p className="text-sm text-finance-neutral mb-4">
             AI-powered personal finance management with smart transaction tracking
           </p>

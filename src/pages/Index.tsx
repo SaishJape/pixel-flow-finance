@@ -59,7 +59,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <MobileLayout title="Finance App">
+      <MobileLayout title="Account Book">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-finance-primary"></div>
         </div>
@@ -70,7 +70,7 @@ const Dashboard = () => {
 
   return (
     <MobileLayout 
-      title="Finance App"
+      title="Account Book"
       action={
         <Button
           variant="ghost"
