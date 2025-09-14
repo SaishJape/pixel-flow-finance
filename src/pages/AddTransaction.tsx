@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { api, Account, DEMO_USER } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { api, Account } from '@/lib/api';
 
 export default function AddTransaction() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -26,15 +27,18 @@ export default function AddTransaction() {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadAccounts();
-  }, []);
+  }, [user]);
 
   const loadAccounts = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
-      const data = await api.getAccounts(DEMO_USER.user_id, DEMO_USER.group_id);
+      const data = await api.getAccounts(user.user_id, user.group_id);
       setAccounts(data);
     } catch (error) {
       console.error('Failed to load accounts:', error);
@@ -63,8 +67,8 @@ export default function AddTransaction() {
     try {
       setSubmitting(true);
       await api.addTransaction({
-        user_id: DEMO_USER.user_id,
-        group_id: DEMO_USER.group_id,
+        user_id: user!.user_id,
+        group_id: user!.group_id,
         setting_id: formData.setting_id || undefined,
         transaction_type: formData.transaction_type,
         category: formData.category,
@@ -82,10 +86,10 @@ export default function AddTransaction() {
       navigate('/');
     } catch (error: any) {
       console.error('Failed to add transaction:', error);
-      if (error.status_code === 400 && error.message?.includes('Insufficient balance')) {
+      if (error.status_code === 400 && error.message === 'Insufficient balance') {
         toast({
           title: "Insufficient Balance",
-          description: `Available: ₹${error.available_balance}, Required: ₹${error.required_amount}`,
+          description: `${error.reason}: Available ₹${error.available_balance}, Required ₹${error.required_amount}`,
           variant: "destructive",
         });
       } else {
@@ -121,7 +125,7 @@ export default function AddTransaction() {
 
   return (
     <MobileLayout title="Add Transaction" showBack onBack={() => navigate('/')}>
-      <div className="p-4 pb-20">
+      <div className="p-4">
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

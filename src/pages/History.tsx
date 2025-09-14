@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { api, Transaction, DEMO_USER } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { api, Transaction } from '@/lib/api';
 import { Filter } from 'lucide-react';
 
 export default function History() {
@@ -16,15 +17,18 @@ export default function History() {
   const [filter, setFilter] = useState<'today' | 'yesterday' | 'this_week' | 'this_month' | 'all'>('this_week');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadTransactions();
-  }, [filter]);
+  }, [filter, user]);
 
   const loadTransactions = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
-      const data = await api.getTransactionHistory(DEMO_USER.user_id, DEMO_USER.group_id, filter);
+      const data = await api.getTransactionHistory(user.user_id, user.group_id, filter);
       setTransactions(data.transactions || []);
     } catch (error) {
       console.error('Failed to load transactions:', error);
@@ -92,7 +96,7 @@ export default function History() {
 
   return (
     <MobileLayout title="Transaction History" showBack onBack={() => navigate('/')}>
-      <div className="p-4 pb-20 space-y-4">
+      <div className="p-4 space-y-4">
         {/* Filter and Summary */}
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">

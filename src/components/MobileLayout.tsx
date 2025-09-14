@@ -29,7 +29,7 @@ export function MobileLayout({ children, title, onBack, showBack = false, action
       </header>
 
       {/* Content */}
-      <main className="pb-safe">
+      <main className="pb-20">
         {children}
       </main>
     </div>

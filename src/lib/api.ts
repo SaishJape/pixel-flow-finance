@@ -114,7 +114,15 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    return response.json();
+    
+    const result = await response.json();
+    
+    // If the response is not successful, throw the error so it can be caught
+    if (!response.ok) {
+      throw result;
+    }
+    
+    return result;
   },
 
   getFinancialSummary: async (user_id: string, group_id: string): Promise<FinancialSummary> => {
@@ -138,7 +146,14 @@ export const api = {
   },
 };
 
-// Demo user data
+// Helper function to get current user data
+export const getCurrentUser = () => {
+  const user_id = localStorage.getItem('user_id') || '1';
+  const group_id = localStorage.getItem('group_id') || '1';
+  return { user_id, group_id };
+};
+
+// Demo user data (fallback)
 export const DEMO_USER = {
   user_id: '1',
   group_id: '1',

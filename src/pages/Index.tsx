@@ -7,7 +7,8 @@ import { TransactionCard } from '@/components/TransactionCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { api, Account, Transaction, FinancialSummary, DEMO_USER } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { api, Account, Transaction, FinancialSummary, getCurrentUser } from '@/lib/api';
 import { Plus, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,20 +18,32 @@ const Dashboard = () => {
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null);
   const [showBalance, setShowBalance] = useState(true);
   const [loading, setLoading] = useState(true);
+  
+  // Pagination state
+  const [accountsPage, setAccountsPage] = useState(1);
+  const [transactionsPage, setTransactionsPage] = useState(1);
+  const itemsPerPage = 3;
+  
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadData();
-  }, []);
+    // Reset pagination when data changes
+    setAccountsPage(1);
+    setTransactionsPage(1);
+  }, [user]);
 
   const loadData = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
       const [accountsData, summaryData, historyData] = await Promise.all([
-        api.getAccounts(DEMO_USER.user_id, DEMO_USER.group_id),
-        api.getFinancialSummary(DEMO_USER.user_id, DEMO_USER.group_id),
-        api.getTransactionHistory(DEMO_USER.user_id, DEMO_USER.group_id, 'this_week')
+        api.getAccounts(user.user_id, user.group_id),
+        api.getFinancialSummary(user.user_id, user.group_id),
+        api.getTransactionHistory(user.user_id, user.group_id, 'this_week')
       ]);
 
       setAccounts(accountsData);
@@ -57,6 +70,22 @@ const Dashboard = () => {
     }).format(amount);
   };
 
+  // Pagination helper functions
+  const getPaginatedAccounts = () => {
+    const startIndex = (accountsPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return accounts.slice(startIndex, endIndex);
+  };
+
+  const getPaginatedTransactions = () => {
+    const startIndex = (transactionsPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return recentTransactions.slice(startIndex, endIndex);
+  };
+
+  const totalAccountsPages = Math.ceil(accounts.length / itemsPerPage);
+  const totalTransactionsPages = Math.ceil(recentTransactions.length / itemsPerPage);
+
   if (loading) {
     return (
       <MobileLayout title="Account Book">
@@ -82,7 +111,7 @@ const Dashboard = () => {
         </Button>
       }
     >
-      <div className="space-y-6 p-4 pb-20">
+      <div className="space-y-6 p-4">
         {/* Balance Overview */}
         <Card className="p-6 bg-gradient-primary text-finance-primary-foreground">
           <div className="text-center">
@@ -90,7 +119,9 @@ const Dashboard = () => {
             <h2 className="text-3xl font-bold mb-4">
               {formatBalance(financialSummary?.total_balance || 0)}
             </h2>
-            <div className="flex justify-center gap-4 text-sm">
+            
+            
+            <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="text-center">
                 <p className="opacity-90">Income</p>
                 <p className="font-semibold text-finance-income">
@@ -103,6 +134,27 @@ const Dashboard = () => {
                   {formatBalance(financialSummary?.expense || 0)}
                 </p>
               </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Loan Details */}
+        <Card className="p-4">
+          <h3 className="font-semibold mb-3 text-center">Loan Summary</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-3 bg-red-50 dark:bg-red-950 rounded-lg">
+              <p className="text-sm text-red-600 dark:text-red-400 mb-1">Loan Payable</p>
+              <p className="font-semibold text-red-700 dark:text-red-300">
+                {formatBalance(financialSummary?.loan_payable || 0)}
+              </p>
+              <p className="text-xs text-red-500 dark:text-red-400 mt-1">Money you owe</p>
+            </div>
+            <div className="text-center p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <p className="text-sm text-green-600 dark:text-green-400 mb-1">Loan Receivable</p>
+              <p className="font-semibold text-green-700 dark:text-green-300">
+                {formatBalance(financialSummary?.loan_receivable || 0)}
+              </p>
+              <p className="text-xs text-green-500 dark:text-green-400 mt-1">Money owed to you</p>
             </div>
           </div>
         </Card>
@@ -132,15 +184,42 @@ const Dashboard = () => {
             </Button>
           </div>
           {accounts.length > 0 ? (
-            <div className="space-y-3">
-              {accounts.slice(0, 3).map((account) => (
-                <AccountCard
-                  key={account.setting_id}
-                  account={account}
-                  onClick={() => navigate('/accounts')}
-                />
-              ))}
-            </div>
+            <>
+              <div className="space-y-3">
+                {getPaginatedAccounts().map((account) => (
+                  <AccountCard
+                    key={account.setting_id}
+                    account={account}
+                    onClick={() => navigate('/accounts')}
+                  />
+                ))}
+              </div>
+              
+              {/* Pagination for Accounts */}
+              {totalAccountsPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAccountsPage(Math.max(1, accountsPage - 1))}
+                    disabled={accountsPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-finance-muted-foreground">
+                    {accountsPage} of {totalAccountsPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAccountsPage(Math.min(totalAccountsPages, accountsPage + 1))}
+                    disabled={accountsPage === totalAccountsPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <Card className="p-6 text-center">
               <p className="text-finance-neutral mb-3">No accounts added yet</p>
@@ -165,14 +244,41 @@ const Dashboard = () => {
             </Button>
           </div>
           {recentTransactions.length > 0 ? (
-            <div className="space-y-3">
-              {recentTransactions.map((transaction) => (
-                <TransactionCard
-                  key={transaction.transaction_id}
-                  transaction={transaction}
-                />
-              ))}
-            </div>
+            <>
+              <div className="space-y-3">
+                {getPaginatedTransactions().map((transaction) => (
+                  <TransactionCard
+                    key={transaction.transaction_id}
+                    transaction={transaction}
+                  />
+                ))}
+              </div>
+              
+              {/* Pagination for Transactions */}
+              {totalTransactionsPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTransactionsPage(Math.max(1, transactionsPage - 1))}
+                    disabled={transactionsPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-finance-muted-foreground">
+                    {transactionsPage} of {totalTransactionsPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTransactionsPage(Math.min(totalTransactionsPages, transactionsPage + 1))}
+                    disabled={transactionsPage === totalTransactionsPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <Card className="p-6 text-center">
               <p className="text-finance-neutral mb-3">No transactions yet</p>

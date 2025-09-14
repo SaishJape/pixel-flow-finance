@@ -6,18 +6,29 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/hooks/useTheme';
-import { User, Database, Info, ExternalLink, Moon, Sun } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { User, Database, Info, ExternalLink, Moon, Sun, LogOut } from 'lucide-react';
 
 export default function Settings() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
 
   const handleExportData = () => {
     toast({
       title: "Export Data",
       description: "Data export functionality will be available soon.",
     });
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    });
+    navigate('/login');
   };
 
   const settingsOptions = [
@@ -38,12 +49,18 @@ export default function Settings() {
       title: 'About',
       description: 'App version and information',
       action: () => toast({ title: "Account Book", description: "Version 1.0.0 - Built with React & TypeScript" })
+    },
+    {
+      icon: LogOut,
+      title: 'Logout',
+      description: 'Sign out of your account',
+      action: handleLogout
     }
   ];
 
   return (
     <MobileLayout title="Settings" showBack onBack={() => navigate('/')}>
-      <div className="p-4 pb-20 space-y-4">
+      <div className="p-4 space-y-4">
         {/* User Info */}
         <Card className="p-6">
           <div className="flex items-center gap-4">
@@ -51,8 +68,8 @@ export default function Settings() {
               <User className="h-6 w-6 text-finance-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">Rao Ghuge</h3>
-              <p className="text-sm text-finance-neutral">rao@baapcompany.com</p>
+              <h3 className="font-semibold text-foreground">{user?.username || 'User'}</h3>
+              <p className="text-sm text-finance-neutral">User ID: {user?.user_id || 'N/A'}</p>
             </div>
           </div>
         </Card>

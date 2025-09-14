@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { api, Account, DEMO_USER } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { api, Account } from '@/lib/api';
 import { Plus } from 'lucide-react';
 
 export default function Accounts() {
@@ -27,15 +28,18 @@ export default function Accounts() {
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadAccounts();
-  }, []);
+  }, [user]);
 
   const loadAccounts = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
-      const data = await api.getAccounts(DEMO_USER.user_id, DEMO_USER.group_id);
+      const data = await api.getAccounts(user.user_id, user.group_id);
       setAccounts(data);
     } catch (error) {
       console.error('Failed to load accounts:', error);
@@ -72,8 +76,8 @@ export default function Accounts() {
           return;
         }
         await api.createBankAccount({
-          user_id: DEMO_USER.user_id,
-          group_id: DEMO_USER.group_id,
+          user_id: user!.user_id,
+          group_id: user!.group_id,
           holder_name: formData.holder_name,
           account_type: 'bank',
           bank_name: formData.bank_name,
@@ -82,8 +86,8 @@ export default function Accounts() {
         });
       } else {
         await api.createCashAccount({
-          user_id: DEMO_USER.user_id,
-          group_id: DEMO_USER.group_id,
+          user_id: user!.user_id,
+          group_id: user!.group_id,
           holder_name: formData.holder_name,
           cash: parseFloat(formData.balance),
         });
@@ -211,7 +215,7 @@ export default function Accounts() {
         </Dialog>
       }
     >
-      <div className="p-4 pb-20">
+      <div className="p-4">
         {accounts.length > 0 ? (
           <div className="space-y-3">
             {accounts.map((account) => (
